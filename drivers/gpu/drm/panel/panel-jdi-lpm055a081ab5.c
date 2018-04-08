@@ -1,3 +1,5 @@
+#define DEBUG 1
+
 /*
  * Copyright (C) 2018 Julian Goldsmith
  * Author: Julian Goldsmith <julian@juliangoldsmith.com>
@@ -40,7 +42,7 @@ struct jdi_panel {
 
 	//struct regulator_bulk_data supplies[ARRAY_SIZE(regulator_names)];
 
-	//struct gpio_desc *enable_gpio;
+	struct gpio_desc *enable_gpio;
 	//struct gpio_desc *reset_gpio;
 	//struct gpio_desc *dcdc_en_gpio;
 	//struct backlight_device *backlight;
@@ -70,12 +72,6 @@ static int jdi_panel_init(struct jdi_panel *jdi)
 
 	usleep_range(10000, 20000);
 
-	ret = mipi_dsi_dcs_set_pixel_format(dsi, MIPI_DCS_PIXEL_FMT_24BIT << 4);
-	if (ret < 0) {
-		dev_err(dev, "failed to set pixel format: %d\n", ret);
-		return ret;
-	}
-
 	ret = mipi_dsi_dcs_set_column_address(dsi, 0, jdi->mode->hdisplay - 1);
 	if (ret < 0) {
 		dev_err(dev, "failed to set column address: %d\n", ret);
@@ -88,40 +84,85 @@ static int jdi_panel_init(struct jdi_panel *jdi)
 		return ret;
 	}
 
-	/*
-	 * BIT(5) BCTRL = 1 Backlight Control Block On, Brightness registers
-	 *                  are active
-	 * BIT(3) BL = 1    Backlight Control On
-	 * BIT(2) DD = 0    Display Dimming is Off
-	 */
-	// FIXME: this is different from previous driver, can we combine?
-	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_WRITE_CONTROL_DISPLAY,
-				 (u8[]){ 0x2c }, 1);
+	// FIXME: I don't know what this does
+	ret = mipi_dsi_generic_write(dsi, (u8[]){ 0xb0, 0x04 }, 2);
 	if (ret < 0) {
 		dev_err(dev, "failed to write control display: %d\n", ret);
 		return ret;
 	}
 
-	/* CABC off */
-	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_WRITE_POWER_SAVE,
-				 (u8[]){ 0x00 }, 1);
+	// FIXME: I don't know what this does
+	ret = mipi_dsi_generic_write(dsi, 
+		 (u8[]){ 0xc7, 0x00, 0x0b, 0x10, 0x19, 0x27, 0x33, 
+		 	 0x3d, 0x4c, 0x32, 0x39, 0x45, 0x57, 0x6a, 
+			 0x74, 0x7f, 0x00, 0x0b, 0x10, 0x19, 0x27, 
+			 0x33, 0x3d, 0x4c, 0x32, 0x39, 0x45, 0x57, 
+			 0x6a, 0x74, 0x7f }, 0x1f);
 	if (ret < 0) {
-		dev_err(dev, "failed to set cabc off: %d\n", ret);
+		dev_err(dev, "failed to write control display: %d\n", ret);
 		return ret;
 	}
 
-	// FIXME: there's a function for this
-	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_SET_TEAR_ON,
-				 (u8[]){ 0x00 }, 1);
+	// FIXME: I don't know what this does
+	ret = mipi_dsi_generic_write(dsi, 
+		 (u8[]){ 0xce, 0x75, 0x40, 0x43, 0x49, 0x55, 0x62, 
+		 	 0x71, 0x82, 0x94, 0xa8, 0xb9, 0xcb, 0xdb, 
+			 0xe9, 0xf5, 0xfc, 0xff, 0x04, 0x00, 0x04, 
+			 0x04, 0x44, 0x20 }, 0x18);
 	if (ret < 0) {
-		dev_err(dev, "failed to set tear on: %d\n", ret);
+		dev_err(dev, "failed to write control display: %d\n", ret);
 		return ret;
 	}
 
-	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_SET_DISPLAY_ON,
-				 (u8[]){ 0x00 }, 1);
+	// FIXME: I don't know what this does
+	ret = mipi_dsi_generic_write(dsi, 
+		 (u8[]){ 0xb8, 0x03, 0x90, 0x1e, 0x10, 0x1e, 0x32 }, 0x7);
 	if (ret < 0) {
-		dev_err(dev, "failed to set display on: %d\n", ret);
+		dev_err(dev, "failed to write control display: %d\n", ret);
+		return ret;
+	}
+
+	// FIXME: I don't know what this does
+	ret = mipi_dsi_generic_write(dsi, 
+		 (u8[]){ 0xb9, 0x03, 0x82, 0x3c, 0x10, 0x3c, 0x87 }, 0x7);
+	if (ret < 0) {
+		dev_err(dev, "failed to write control display: %d\n", ret);
+		return ret;
+	}
+
+	// FIXME: I don't know what this does
+	ret = mipi_dsi_generic_write(dsi, 
+		 (u8[]){ 0xba, 0x03, 0x78, 0x64, 0x10, 0x64, 0xb4 }, 0x7);
+	if (ret < 0) {
+		dev_err(dev, "failed to write control display: %d\n", ret);
+		return ret;
+	}
+
+	// FIXME: I don't know what this does
+	ret = mipi_dsi_generic_write(dsi, (u8[]){ 0xd6, 0x01 }, 0x2);
+	if (ret < 0) {
+		dev_err(dev, "failed to write control display: %d\n", ret);
+		return ret;
+	}
+
+	// FIXME: I don't know what this does
+	ret = mipi_dsi_generic_write(dsi, (u8[]){ 0xb0, 0x03 }, 0x2);
+	if (ret < 0) {
+		dev_err(dev, "failed to write control display: %d\n", ret);
+		return ret;
+	}
+
+	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 
+				 (u8[]){ 0xff }, 0x1);
+	if (ret < 0) {
+		dev_err(dev, "failed to write control display: %d\n", ret);
+		return ret;
+	}
+
+	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_WRITE_CONTROL_DISPLAY, 
+				 (u8[]){ 0x2c }, 0x1);
+	if (ret < 0) {
+		dev_err(dev, "failed to write control display: %d\n", ret);
 		return ret;
 	}
 
@@ -130,8 +171,53 @@ static int jdi_panel_init(struct jdi_panel *jdi)
 		dev_err(dev, "failed to set exit sleep mode: %d\n", ret);
 		return ret;
 	}
-
 	msleep(120);
+
+	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_SET_ADDRESS_MODE, 
+				 (u8[]){ 0x00 }, 0x1);
+	if (ret < 0) {
+		dev_err(dev, "failed to write control display: %d\n", ret);
+		return ret;
+	}
+	msleep(17);
+
+	// FIXME: was MIPI_DCS_PIXEL_FMT_24BIT << 4, why is it different?
+	ret = mipi_dsi_dcs_set_pixel_format(dsi, 0x77);
+	if (ret < 0) {
+		dev_err(dev, "failed to set pixel format: %d\n", ret);
+		return ret;
+	}
+
+
+	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_SET_TEAR_SCANLINE, 
+				 (u8[]){ 0x00, 0x00 }, 0x2);
+	if (ret < 0) {
+		dev_err(dev, "failed to write control display: %d\n", ret);
+		return ret;
+	}
+
+	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_SET_TEAR_ON,
+				 (u8[]){ 0x00 }, 1);
+	if (ret < 0) {
+		dev_err(dev, "failed to set tear on: %d\n", ret);
+		return ret;
+	}
+
+
+	/* CABC off */
+	/*ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_WRITE_POWER_SAVE,
+				 (u8[]){ 0x00 }, 1);
+	if (ret < 0) {
+		dev_err(dev, "failed to set cabc off: %d\n", ret);
+		return ret;
+	}*/
+
+	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_SET_DISPLAY_ON,
+				 (u8[]){ 0x00 }, 1);
+	if (ret < 0) {
+		dev_err(dev, "failed to set display on: %d\n", ret);
+		return ret;
+	}
 
 	/* Interface setting, video mode */
 	/*ret = mipi_dsi_generic_write(dsi, (u8[])
@@ -161,6 +247,10 @@ static int jdi_panel_on(struct jdi_panel *jdi)
 	int ret;
 
 	dsi->mode_flags |= MIPI_DSI_MODE_LPM;
+
+	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
+	if (ret < 0)
+		dev_err(dev, "failed to exit sleep mode: %d\n", ret);
 
 	ret = mipi_dsi_dcs_set_display_on(dsi);
 	if (ret < 0)
@@ -214,12 +304,15 @@ static int jdi_panel_unprepare(struct drm_panel *panel)
 
 	jdi_panel_off(jdi);
 
-	/*ret = regulator_bulk_disable(ARRAY_SIZE(jdi->supplies), jdi->supplies);
+	/*
+	ret = regulator_bulk_disable(ARRAY_SIZE(jdi->supplies), jdi->supplies);
 	if (ret < 0)
 		dev_err(dev, "regulator disable failed, %d\n", ret);
+	*/
 
 	gpiod_set_value(jdi->enable_gpio, 0);
 
+	/*
 	gpiod_set_value(jdi->reset_gpio, 1);
 
 	gpiod_set_value(jdi->dcdc_en_gpio, 0);
@@ -234,7 +327,7 @@ static int jdi_panel_prepare(struct drm_panel *panel)
 {
 	struct jdi_panel *jdi = to_jdi_panel(panel);
 	struct device *dev = &jdi->dsi->dev;
-	int ret;
+	int ret = 0;
 
 	if (jdi->prepared)
 		return 0;
@@ -255,6 +348,7 @@ static int jdi_panel_prepare(struct drm_panel *panel)
 
 	gpiod_set_value(jdi->reset_gpio, 0);
 	usleep_range(10, 20);
+	*/
 
 	gpiod_set_value(jdi->enable_gpio, 1);
 	usleep_range(10, 20);
@@ -270,26 +364,27 @@ static int jdi_panel_prepare(struct drm_panel *panel)
 		dev_err(dev, "failed to set panel on: %d\n", ret);
 		goto poweroff;
 	}
-	*/
 
 	jdi->prepared = true;
 
 	return 0;
 
-	/*
 poweroff:
+	/*
 	ret = regulator_bulk_disable(ARRAY_SIZE(jdi->supplies), jdi->supplies);
 	if (ret < 0)
 		dev_err(dev, "regulator disable failed, %d\n", ret);
+	*/
 
 	gpiod_set_value(jdi->enable_gpio, 0);
 
+	/*
 	gpiod_set_value(jdi->reset_gpio, 1);
 
 	gpiod_set_value(jdi->dcdc_en_gpio, 0);
+	*/
 
 	return ret;
-	*/
 }
 
 static int jdi_panel_enable(struct drm_panel *panel)
@@ -308,16 +403,17 @@ static int jdi_panel_enable(struct drm_panel *panel)
 }
 
 static const struct drm_display_mode default_mode = {
-	.clock = 150000,
+	.clock = 60 * (1080 + 96 + 16 + 16) * (1920 + 4 + 1 + 16) / 1000,
 	.hdisplay = 1080,
-	.hsync_start = 1080 + 2,
-	.hsync_end = 1080 + 2 + 2,
-	.htotal = 1080 + 2 + 2 + 2,
+	.hsync_start = 1080 + 96,
+	.hsync_end = 1080 + 96 + 16,
+	.htotal = 1080 + 96 + 16 + 16,
 	.vdisplay = 1920,
-	.vsync_start = 1920 + 2,
-	.vsync_end = 1920 + 2 + 2,
-	.vtotal = 1920 + 2 + 2 + 2,
+	.vsync_start = 1920 + 4,
+	.vsync_end = 1920 + 4 + 1,
+	.vtotal = 1920 + 4 + 1 + 16,
 	.vrefresh = 60,
+	.flags = 0,
 };
 
 static int jdi_panel_get_modes(struct drm_panel *panel)
@@ -431,6 +527,7 @@ static int jdi_panel_add(struct jdi_panel *jdi)
 		dev_err(dev, "failed to init regulator, ret=%d\n", ret);
 		return ret;
 	}
+	*/
 
 	jdi->enable_gpio = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
 	if (IS_ERR(jdi->enable_gpio)) {
@@ -439,6 +536,7 @@ static int jdi_panel_add(struct jdi_panel *jdi)
 		return ret;
 	}
 
+	/*
 	jdi->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(jdi->reset_gpio)) {
 		ret = PTR_ERR(jdi->reset_gpio);
@@ -482,7 +580,9 @@ static int jdi_panel_probe(struct mipi_dsi_device *dsi)
 
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB888;
-	dsi->mode_flags =  MIPI_DSI_MODE_VIDEO |
+	dsi->mode_flags =  MIPI_DSI_MODE_VIDEO_BURST | 
+			   MIPI_DSI_MODE_VIDEO_HSE | 
+			   MIPI_DSI_MODE_EOT_PACKET | 
 			   MIPI_DSI_CLOCK_NON_CONTINUOUS;
 
 	jdi = devm_kzalloc(&dsi->dev, sizeof(*jdi), GFP_KERNEL);
