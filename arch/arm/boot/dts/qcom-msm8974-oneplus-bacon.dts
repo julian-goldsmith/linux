@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 #include "qcom-msm8974.dtsi"
 #include "qcom-pm8841.dtsi"
 #include "qcom-pm8941.dtsi"
@@ -244,7 +245,7 @@
 				function = "mdp_vsync";
 
 				drive-strength = <2>;
-				bias-pull-down;
+				bias-disable;
 			};
 		};
 	};
@@ -370,7 +371,7 @@
 		#size-cells = <1>;
 		ranges;
 
-		mdp: mdp@fd900000 {
+		mdp: mdp@fd900100 {
 			compatible = "qcom,mdp5";
 			reg = <0xfd900100 0x22000>;
 			reg-names = "mdp_phys";
@@ -429,18 +430,14 @@
 				<&mmcc MDSS_BYTE0_CLK>,
 				<&mmcc MDSS_PCLK0_CLK>,
 				<&mmcc MDSS_ESC0_CLK>,
-				<&mmcc MMSS_MISC_AHB_CLK>,
-				<&mmcc MMSS_S0_AXI_CLK>,
-				<&mmcc MMSS_MMSSNOC_AXI_CLK>;
+				<&mmcc MMSS_MISC_AHB_CLK>;
 		    clock-names = "mdp_core",
 			      "iface",
 			      "bus",
 			      "byte",
 			      "pixel",
 			      "core",
-			      "core_mmss",
-			      "s0_axi",
-			      "mmssnoc";
+			      "core_mmss";
 
 		    phys = <&dsi_phy0>;
 		    phy-names ="dsi-phy";
@@ -475,15 +472,12 @@
 
 		    panel: panel@0 {
 			reg = <0>;
-			//compatible = "jdi,1080p";
 			compatible = "jdi,lpm055a081ab5";
 
 			// backlight?, reset?, enable?
 
 			disp-te-gpios = <&msmgpio 12 0>;
 			enable-gpios = <&msmgpio 58 0>;
-			//vdd-supply = <&pm8941_lvs3>;
-			//vddio-supply = <&pm8941_l12>;
 
 			pinctrl-names = "default";
 			pinctrl-0 = <&panel_pin>;
