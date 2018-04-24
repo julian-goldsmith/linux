@@ -336,6 +336,8 @@ static int dsi_clk_init(struct msm_dsi_host *msm_host)
 	struct platform_device *pdev = msm_host->pdev;
 	const struct msm_dsi_cfg_handler *cfg_hnd = msm_host->cfg_hnd;
 	const struct msm_dsi_config *cfg = cfg_hnd->cfg;
+	struct clk *s0_clk;
+	struct clk *mmssnoc_clk;
 	int i, ret = 0;
 
 	/* get bus clocks */
@@ -430,6 +432,19 @@ static int dsi_clk_init(struct msm_dsi_host *msm_host)
 				__func__, ret);
 		}
 	}
+
+#if 1
+	mmssnoc_clk = msm_clk_get(pdev, "mmssnoc");
+	clk_set_rate(mmssnoc_clk, 100000000);
+	clk_prepare_enable(mmssnoc_clk);
+#endif
+
+#if 1
+	s0_clk = msm_clk_get(pdev, "s0_axi");
+	clk_set_rate(s0_clk, 100000000);
+	clk_prepare_enable(s0_clk);
+#endif
+
 exit:
 	return ret;
 }
@@ -440,10 +455,6 @@ static int dsi_bus_clk_enable(struct msm_dsi_host *msm_host)
 	int i, ret;
 
 	DBG("id=%d", msm_host->id);
-
-	/* set the bus clock to the high value for now .. */
-	ret = clk_set_rate(msm_host->bus_clks[2], 466800000);
-	WARN_ON(ret);
 
 	for (i = 0; i < cfg->num_bus_clks; i++) {
 		ret = clk_prepare_enable(msm_host->bus_clks[i]);

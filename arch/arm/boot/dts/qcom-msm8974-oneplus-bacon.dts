@@ -430,14 +430,18 @@
 				<&mmcc MDSS_BYTE0_CLK>,
 				<&mmcc MDSS_PCLK0_CLK>,
 				<&mmcc MDSS_ESC0_CLK>,
-				<&mmcc MMSS_MISC_AHB_CLK>;
+				<&mmcc MMSS_MISC_AHB_CLK>,
+				<&mmcc MMSS_S0_AXI_CLK>,
+				<&mmcc MMSS_MMSSNOC_AXI_CLK>;
 		    clock-names = "mdp_core",
 			      "iface",
 			      "bus",
 			      "byte",
 			      "pixel",
 			      "core",
-			      "core_mmss";
+			      "core_mmss",
+			      "s0_axi",
+			      "mmssnoc";
 
 		    phys = <&dsi_phy0>;
 		    phy-names ="dsi-phy";
