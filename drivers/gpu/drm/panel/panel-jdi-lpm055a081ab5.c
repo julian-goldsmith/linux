@@ -32,15 +32,15 @@
 #include <video/mipi_display.h>
 
 static const char * const regulator_names[] = {
-	"vddp",
-	"iovcc"
+	"vdd",
+	"vddio"
 };
 
 struct jdi_panel {
 	struct drm_panel base;
 	struct mipi_dsi_device *dsi;
 
-	//struct regulator_bulk_data supplies[ARRAY_SIZE(regulator_names)];
+	struct regulator_bulk_data supplies[ARRAY_SIZE(regulator_names)];
 
 	struct gpio_desc *enable_gpio;
 	//struct gpio_desc *reset_gpio;
@@ -281,11 +281,9 @@ static int jdi_panel_unprepare(struct drm_panel *panel)
 
 	jdi_panel_off(jdi);
 
-	/*
 	ret = regulator_bulk_disable(ARRAY_SIZE(jdi->supplies), jdi->supplies);
 	if (ret < 0)
 		dev_err(dev, "regulator disable failed, %d\n", ret);
-	*/
 
 	gpiod_set_value(jdi->enable_gpio, 0);
 
@@ -311,7 +309,6 @@ static int jdi_panel_prepare(struct drm_panel *panel)
 
 	// FIXME: do all of this
 
-	/*
 	ret = regulator_bulk_enable(ARRAY_SIZE(jdi->supplies), jdi->supplies);
 	if (ret < 0) {
 		dev_err(dev, "regulator enable failed, %d\n", ret);
@@ -320,6 +317,7 @@ static int jdi_panel_prepare(struct drm_panel *panel)
 
 	msleep(20);
 
+	/*
 	gpiod_set_value(jdi->dcdc_en_gpio, 1);
 	usleep_range(10, 20);
 
@@ -347,11 +345,9 @@ static int jdi_panel_prepare(struct drm_panel *panel)
 	return 0;
 
 poweroff:
-	/*
 	ret = regulator_bulk_disable(ARRAY_SIZE(jdi->supplies), jdi->supplies);
 	if (ret < 0)
 		dev_err(dev, "regulator disable failed, %d\n", ret);
-	*/
 
 	gpiod_set_value(jdi->enable_gpio, 0);
 
@@ -495,7 +491,6 @@ static int jdi_panel_add(struct jdi_panel *jdi)
 
 	jdi->mode = &default_mode;
 
-	/*
 	for (i = 0; i < ARRAY_SIZE(jdi->supplies); i++)
 		jdi->supplies[i].supply = regulator_names[i];
 
@@ -505,7 +500,6 @@ static int jdi_panel_add(struct jdi_panel *jdi)
 		dev_err(dev, "failed to init regulator, ret=%d\n", ret);
 		return ret;
 	}
-	*/
 
 	jdi->enable_gpio = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
 	if (IS_ERR(jdi->enable_gpio)) {

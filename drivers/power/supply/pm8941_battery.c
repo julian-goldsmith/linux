@@ -251,7 +251,6 @@ static int interpolate_capacity(int temp, int ocv,
 		}
 	}
 
-	printk("OCV ROWS %d", ocv_lut.rows);
 	if (ocv >= ocv_lut.lut[0][j])
 		return ocv_lut.capacity_legend[0];
 	
@@ -291,7 +290,6 @@ static int interpolate_capacity(int temp, int ocv,
 		}
 	}
 
-	printk("pcj: %d pcj_minux_one: %d", pcj, pcj_minus_one);
 	if (pcj)
 		return pcj;
 
@@ -330,9 +328,7 @@ static int bms_calculate_capacity(struct bms_device_info *di)
 {
 	int cc, ocv_capacity, fcc;
 	s8 temp = 33;//TODO 
-	printk("OCV: %d", di->ocv);
 	ocv_capacity = interpolate_capacity(temp, (di->ocv + 5) / 10, di->ocv_lut);
-	printk("bms: capacity: %d", ocv_capacity);
 
 	cc = bms_read_cc(di);
 	fcc = interpolate_fcc(temp, di->fcc_lut);
@@ -371,7 +367,6 @@ static enum power_supply_property bms_props[] = {
 static irqreturn_t bms_ocv_thr_irq_handler(int irq, void *dev_id)
 {
 	struct bms_device_info *di = dev_id;
-	printk("!!!!!!!!!!!!!THR_IRQ!!!!!!!!!!!!");
 	di->ocv = bms_read_ocv(di); 
 	bms_reset_cc(di);
 	return IRQ_HANDLED;
@@ -430,23 +425,10 @@ static int bms_probe(struct platform_device *pdev)
 		dev_dbg(di->dev, "No fcc lut array found");
 
 	for (i = 0; i < 60; i++){
-		for(tmp = 0; tmp <= 4; tmp++)
-			printk("bms: ocv: lut %d %d: %d", i, tmp, di->ocv_lut.lut[i][tmp]);
-
-		printk("bms: ocv: capacity %d: %d", i, di->ocv_lut.capacity_legend[i]);
-	}
-
-	for (i = 0; i < 60; i++){
 		if (di->ocv_lut.capacity_legend[i] == 0){
 			di->ocv_lut.rows = i;
 			break;
 		}
-	}
-
-	for(i = 0; i <= 4; i++){
-		printk("bms: ocv: temp %d: %d", i, di->ocv_lut.temp_legend[i]);
-		printk("bms: fcc: temp %d: %d", i, di->fcc_lut.temp_legend[i]);
-		printk("bms: fcc: lut %d: %d", i, di->fcc_lut.lut[i]);
 	}
 //parse dt STOP
 

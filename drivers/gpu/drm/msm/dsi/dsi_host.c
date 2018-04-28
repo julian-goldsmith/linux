@@ -846,8 +846,8 @@ static void dsi_ctrl_config(struct msm_dsi_host *msm_host, bool enable,
 	}
 
 	dsi_write(msm_host, REG_DSI_CMD_DMA_CTRL,
-			DSI_CMD_DMA_CTRL_FROM_FRAME_BUFFER |
-			DSI_CMD_DMA_CTRL_LOW_POWER);
+			DSI_CMD_DMA_CTRL_FROM_FRAME_BUFFER
+			);
 
 	data = 0;
 	/* Always assume dedicated TE pin */
@@ -885,7 +885,8 @@ static void dsi_ctrl_config(struct msm_dsi_host *msm_host, bool enable,
 	data = DSI_CTRL_CLK_EN;
 
 	DBG("lane number=%d", msm_host->lanes);
-	data |= ((DSI_CTRL_LANE0 << msm_host->lanes) - DSI_CTRL_LANE0);
+	//data |= ((DSI_CTRL_LANE0 << msm_host->lanes) - DSI_CTRL_LANE0);
+	data |= DSI_CTRL_LANE0 | DSI_CTRL_LANE1 | DSI_CTRL_LANE2 | DSI_CTRL_LANE3;
 
 	dsi_write(msm_host, REG_DSI_LANE_SWAP_CTRL,
 		  DSI_LANE_SWAP_CTRL_DLN_SWAP_SEL(msm_host->dlane_swap));
@@ -897,6 +898,29 @@ static void dsi_ctrl_config(struct msm_dsi_host *msm_host, bool enable,
 	data |= DSI_CTRL_ENABLE;
 
 	dsi_write(msm_host, REG_DSI_CTRL, data);
+
+	usleep_range(10000, 15000);
+
+	/* HACK: disable ULPS for testing on MSM8974 */
+	u32 lane_status = dsi_read(msm_host, REG_DSI_LANE_CTRL);
+	printk("lane status: %8x\n", lane_status);
+
+	u32 active_lanes = BIT(4);	/* clock lane*/
+	active_lanes |= BIT(0) | BIT(1) | BIT(2) | BIT(3);	/* try just setting all lanes */
+	dsi_write(msm_host, REG_DSI_LANE_SWAP_CTRL, active_lanes << 8);
+	usleep_range(1000, 1500);
+
+	lane_status = dsi_read(msm_host, REG_DSI_LANE_CTRL);
+	u32 swapctrl = dsi_read(msm_host, REG_DSI_LANE_CTRL);
+	printk("lane status: %8x, active: %8x, host: %8x, swap: %8x\n", lane_status, active_lanes, msm_host->lanes, swapctrl);
+
+	dsi_write(msm_host, REG_DSI_LANE_SWAP_CTRL, active_lanes << 16);
+	dsi_write(msm_host, REG_DSI_LANE_SWAP_CTRL, 0x00);
+	usleep_range(100, 150);
+
+	lane_status = dsi_read(msm_host, REG_DSI_LANE_CTRL);
+	printk("lane status: %8x\n", lane_status);
+	/* end HACK */
 }
 
 static void dsi_timing_setup(struct msm_dsi_host *msm_host)
@@ -2294,6 +2318,26 @@ int msm_dsi_host_power_on(struct mipi_dsi_host *host,
 
 	if (msm_host->disp_en_gpio)
 		gpiod_set_value(msm_host->disp_en_gpio, 1);
+
+	/* HACK: disable ULPS for testing on MSM8974 */
+	u32 lane_status = dsi_read(msm_host, 0x0A8);
+	printk("lane status: %8x\n", lane_status);
+
+	u32 active_lanes = BIT(4);	/* clock lane*/
+	active_lanes |= BIT(0) | BIT(1) | BIT(2) | BIT(3);	/* try just setting all lanes */
+	dsi_write(msm_host, REG_DSI_LANE_SWAP_CTRL, active_lanes << 8);
+	usleep_range(1000, 1500);
+
+	lane_status = dsi_read(msm_host, 0x0A8);
+	printk("lane status: %8x, active: %8x\n", lane_status, active_lanes);
+
+	dsi_write(msm_host, REG_DSI_LANE_SWAP_CTRL, active_lanes << 16);
+	dsi_write(msm_host, REG_DSI_LANE_SWAP_CTRL, 0x00);
+	usleep_range(100, 150);
+
+	lane_status = dsi_read(msm_host, 0x0A8);
+	printk("lane status: %8x\n", lane_status);
+	/* end HACK */
 
 	msm_host->power_on = true;
 	mutex_unlock(&msm_host->dev_mutex);
