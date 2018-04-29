@@ -87,59 +87,7 @@ static int jdi_panel_init(struct jdi_panel *jdi)
 	msleep(1);
 
 	// FIXME: I don't know what this does
-	ret = mipi_dsi_generic_write(dsi, (u8[]){ 0xb0, 0x04 }, 2);
-	if (ret < 0) {
-		dev_err(dev, "failed to write control display: %d\n", ret);
-		return ret;
-	}
-	msleep(1);
-
-	// FIXME: I don't know what this does
-	ret = mipi_dsi_generic_write(dsi, 
-		 (u8[]){ 0xc7, 0x00, 0x0b, 0x10, 0x19, 0x27, 0x33, 
-		 	 0x3d, 0x4c, 0x32, 0x39, 0x45, 0x57, 0x6a, 
-			 0x74, 0x7f, 0x00, 0x0b, 0x10, 0x19, 0x27, 
-			 0x33, 0x3d, 0x4c, 0x32, 0x39, 0x45, 0x57, 
-			 0x6a, 0x74, 0x7f }, 0x1f);
-	if (ret < 0) {
-		dev_err(dev, "failed to write control display: %d\n", ret);
-		return ret;
-	}
-	msleep(1);
-
-	// FIXME: I don't know what this does
-	ret = mipi_dsi_generic_write(dsi, 
-		 (u8[]){ 0xce, 0x75, 0x40, 0x43, 0x49, 0x55, 0x62, 
-		 	 0x71, 0x82, 0x94, 0xa8, 0xb9, 0xcb, 0xdb, 
-			 0xe9, 0xf5, 0xfc, 0xff, 0x04, 0x00, 0x04, 
-			 0x04, 0x44, 0x20 }, 0x18);
-	if (ret < 0) {
-		dev_err(dev, "failed to write control display: %d\n", ret);
-		return ret;
-	}
-	msleep(1);
-
-	// FIXME: I don't know what this does
-	ret = mipi_dsi_generic_write(dsi, 
-		 (u8[]){ 0xb8, 0x03, 0x90, 0x1e, 0x10, 0x1e, 0x32 }, 0x7);
-	if (ret < 0) {
-		dev_err(dev, "failed to write control display: %d\n", ret);
-		return ret;
-	}
-	msleep(1);
-
-	// FIXME: I don't know what this does
-	ret = mipi_dsi_generic_write(dsi, 
-		 (u8[]){ 0xb9, 0x03, 0x82, 0x3c, 0x10, 0x3c, 0x87 }, 0x7);
-	if (ret < 0) {
-		dev_err(dev, "failed to write control display: %d\n", ret);
-		return ret;
-	}
-	msleep(1);
-
-	// FIXME: I don't know what this does
-	ret = mipi_dsi_generic_write(dsi, 
-		 (u8[]){ 0xba, 0x03, 0x78, 0x64, 0x10, 0x64, 0xb4 }, 0x7);
+	ret = mipi_dsi_generic_write(dsi, (u8[]){ 0xb0, 0x00 }, 2);
 	if (ret < 0) {
 		dev_err(dev, "failed to write control display: %d\n", ret);
 		return ret;
@@ -154,23 +102,7 @@ static int jdi_panel_init(struct jdi_panel *jdi)
 	}
 	msleep(1);
 
-	// FIXME: I don't know what this does
-	ret = mipi_dsi_generic_write(dsi, (u8[]){ 0xb0, 0x03 }, 0x2);
-	if (ret < 0) {
-		dev_err(dev, "failed to write control display: %d\n", ret);
-		return ret;
-	}
-	msleep(1);
-
 	ret = mipi_dsi_dcs_set_display_brightness(dsi, 255);
-	if (ret < 0) {
-		dev_err(dev, "failed to write control display: %d\n", ret);
-		return ret;
-	}
-	msleep(1);
-
-	ret = mipi_dsi_dcs_write(dsi, MIPI_DCS_WRITE_CONTROL_DISPLAY, 
-				 (u8[]){ 0x2c }, 0x1);
 	if (ret < 0) {
 		dev_err(dev, "failed to write control display: %d\n", ret);
 		return ret;
@@ -207,12 +139,13 @@ static int jdi_panel_init(struct jdi_panel *jdi)
 	}
 	msleep(1);
 
-	ret = mipi_dsi_dcs_set_tear_on(dsi, MIPI_DSI_DCS_TEAR_MODE_VBLANK);
+	u8 mode;
+	ret = mipi_dsi_dcs_get_power_mode(dsi, &mode);
 	if (ret < 0) {
-		dev_err(dev, "failed to set tear on: %d\n", ret);
-		return ret;
+		dev_err(dev, "failed to get power mode: %d\n", ret);
+	} else {
+		printk("power mode: %d\n", mode);
 	}
-	msleep(1);
 
 	return 0;
 }
