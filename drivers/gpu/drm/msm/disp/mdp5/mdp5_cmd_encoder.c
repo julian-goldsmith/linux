@@ -156,7 +156,7 @@ void mdp5_cmd_encoder_disable(struct drm_encoder *encoder)
 	if (WARN_ON(!mdp5_cmd_enc->enabled))
 		return;
 
-	pingpong_tearcheck_disable(encoder);
+	//pingpong_tearcheck_disable(encoder);
 
 	mdp5_ctl_set_encoder_state(ctl, pipeline, false);
 	mdp5_ctl_commit(ctl, pipeline, mdp_ctl_flush_mask_encoder(intf), true);
@@ -177,8 +177,8 @@ void mdp5_cmd_encoder_enable(struct drm_encoder *encoder)
 		return;
 
 	bs_set(mdp5_cmd_enc, 1);
-	if (pingpong_tearcheck_enable(encoder))
-		return;
+	//if (pingpong_tearcheck_enable(encoder))
+	//	return;
 
 	mdp5_ctl_commit(ctl, pipeline, mdp_ctl_flush_mask_encoder(intf), true);
 
