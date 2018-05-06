@@ -113,7 +113,7 @@ static int pingpong_tearcheck_enable(struct drm_encoder *encoder)
 		return ret;
 	}
 
-	mdp5_write(mdp5_kms, REG_MDP5_PP_TEAR_CHECK_EN(pp_id), 1);
+	//mdp5_write(mdp5_kms, REG_MDP5_PP_TEAR_CHECK_EN(pp_id), 1);
 
 	return 0;
 }
@@ -124,7 +124,7 @@ static void pingpong_tearcheck_disable(struct drm_encoder *encoder)
 	struct mdp5_hw_mixer *mixer = mdp5_crtc_get_mixer(encoder->crtc);
 	int pp_id = mixer->pp;
 
-	mdp5_write(mdp5_kms, REG_MDP5_PP_TEAR_CHECK_EN(pp_id), 0);
+	//mdp5_write(mdp5_kms, REG_MDP5_PP_TEAR_CHECK_EN(pp_id), 0);
 	clk_disable_unprepare(mdp5_kms->vsync_clk);
 }
 
@@ -156,7 +156,7 @@ void mdp5_cmd_encoder_disable(struct drm_encoder *encoder)
 	if (WARN_ON(!mdp5_cmd_enc->enabled))
 		return;
 
-	//pingpong_tearcheck_disable(encoder);
+	pingpong_tearcheck_disable(encoder);
 
 	mdp5_ctl_set_encoder_state(ctl, pipeline, false);
 	mdp5_ctl_commit(ctl, pipeline, mdp_ctl_flush_mask_encoder(intf), true);
@@ -177,8 +177,8 @@ void mdp5_cmd_encoder_enable(struct drm_encoder *encoder)
 		return;
 
 	bs_set(mdp5_cmd_enc, 1);
-	//if (pingpong_tearcheck_enable(encoder))
-	//	return;
+	if (pingpong_tearcheck_enable(encoder))
+		return;
 
 	mdp5_ctl_commit(ctl, pipeline, mdp_ctl_flush_mask_encoder(intf), true);
 
