@@ -156,22 +156,24 @@ struct cci {
 static const struct resources res_v1_0_8 = {
 	.clock = { "camss_top_ahb",
 		   "cci_ahb",
-		   // "camss_ahb",
+		   "camss_ahb",
 		   "cci" },
 	.clock_rate = { 0,
 			80000000,
-			// 0,
+			0,
 			19200000 },
 	.reg = { "cci" },
 	.interrupt = { "cci" }
 };
 
 static const struct resources res_v1_4_0 = {
-	.clock = { "camss_top_ahb",
+	.clock = { "mmss_mmagic_ahb",
+		   "camss_top_ahb",
 		   "cci_ahb",
 		   "camss_ahb",
 		   "cci" },
 	.clock_rate = { 0,
+			0,
 			0,
 			0,
 			37500000 },
@@ -199,7 +201,7 @@ static const struct hw_params hw_params_v1_0_8[3] = {
 		.tsu_sta = 21,
 		.thd_dat = 13,
 		.thd_sta = 18,
-		.tbuf = 32, // 25 ?
+		.tbuf = 32,
 		.scl_stretch_en = 0,
 		.trdhld = 6,
 		.tsp = 3
@@ -440,7 +442,7 @@ static int cci_run_queue(struct cci *cci, u8 master, u8 queue)
 	writel(val, cci->base + CCI_QUEUE_START);
 
 	time = wait_for_completion_timeout(&cci->master[master].irq_complete,
-					   msecs_to_jiffies(CCI_TIMEOUT_MS));
+					   CCI_TIMEOUT_MS);
 	if (!time) {
 		dev_err(cci->dev, "master %d queue %d timeout\n",
 			master, queue);
@@ -492,7 +494,7 @@ static int cci_i2c_read(struct cci *cci, u16 addr, u8 *buf, u16 len)
 	if (ret < 0)
 		return ret;
 
-	val = CCI_I2C_SET_PARAM | (addr & 0x7f) << 4;
+	val = CCI_I2C_SET_PARAM | ((addr >> 1) & 0x7f) << 4;
 	writel(val, cci->base + CCI_I2C_Mm_Qn_LOAD_DATA(master, queue));
 
 	val = CCI_I2C_READ | len << 4;
@@ -547,7 +549,7 @@ static int cci_i2c_write(struct cci *cci, u16 addr, u8 *buf, u16 len)
 	if (ret < 0)
 		return ret;
 
-	val = CCI_I2C_SET_PARAM | (addr & 0x7f) << 4;
+	val = CCI_I2C_SET_PARAM | ((addr >> 1) & 0x7f) << 4;
 	writel(val, cci->base + CCI_I2C_Mm_Qn_LOAD_DATA(master, queue));
 
 	i = 0;
@@ -592,9 +594,6 @@ static int cci_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 			break;
 		}
 	}
-
-	if (i == num && !ret) /* all operations are successful */
-		ret = num;
 
 	return ret;
 }
